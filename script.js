@@ -1,81 +1,78 @@
 async function loadMedia() {
-  const response = await fetch('media.json');
-  const data = await response.json();
-  const gallery = document.getElementById('gallery');
-  gallery.innerHTML = "";
+  try {
+    const response = await fetch('media.json');
+    if (!response.ok) throw new Error('Fichier introuvable');
+    const media = await response.json();
 
-  data.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'gallery-item';
+    const seen = new Set();
+    const gallery = document.getElementById('gallery');
 
-    const dlBtn = document.createElement('a');
-    dlBtn.href = item.file;
-    dlBtn.className = 'download-btn';
-    dlBtn.innerText = '⤓';
-    dlBtn.download = "";
+    for (let item of media) {
+      if (seen.has(item.file)) continue;
+      seen.add(item.file);
 
-    if (item.type === 'image') {
-      const img = document.createElement('img');
-      img.src = item.file;
-      img.onclick = () => showLightbox('image', item.file);
-      div.appendChild(img);
-    } else if (item.type === 'video') {
-      const video = document.createElement('video');
-      video.src = item.file;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.onclick = () => showLightbox('video', item.file);
-      div.appendChild(video);
+      const div = document.createElement('div');
+      div.className = 'gallery-item';
+
+      if (item.type === 'image') {
+        const img = document.createElement('img');
+        img.src = item.file;
+        img.alt = 'Souvenir';
+        img.onclick = () => showLightbox(img.cloneNode());
+        div.appendChild(img);
+      } else if (item.type === 'video') {
+        const video = document.createElement('video');
+        video.src = item.file;
+        video.controls = true;
+
+        // Vérifie la durée maximale (60 secondes)
+        video.addEventListener('loadedmetadata', () => {
+          if (video.duration <= 60) {
+            video.onclick = () => showLightbox(video.cloneNode(true));
+            div.appendChild(video);
+          }
+        });
+      }
+
+      gallery.appendChild(div);
     }
 
-    div.appendChild(dlBtn);
-    gallery.appendChild(div);
-  });
+  } catch (e) {
+    console.error(e);
+    document.getElementById('error').style.display = 'block';
+  }
 }
 
-function showLightbox(type, file) {
-  const lb = document.getElementById('lightbox');
+function showLightbox(element) {
+  const box = document.getElementById('lightbox');
   const content = document.getElementById('lightbox-content');
   content.innerHTML = '';
-
-  if (type === 'image') {
-    const img = document.createElement('img');
-    img.src = file;
-    content.appendChild(img);
-  } else if (type === 'video') {
-    const video = document.createElement('video');
-    video.src = file;
-    video.controls = true;
-    video.autoplay = true;
-    content.appendChild(video);
-  }
-
-  lb.style.display = 'flex';
+  content.appendChild(element);
+  box.style.display = 'flex';
 }
 
 function closeLightbox() {
   document.getElementById('lightbox').style.display = 'none';
-  document.getElementById('lightbox-content').innerHTML = '';
 }
 
-document.getElementById('uploadForm').addEventListener('submit', async function (e) {
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const formData = new FormData(this);
+  const input = document.getElementById('media');
+  const file = input.files[0];
+  const formData = new FormData();
+  formData.append('media', file);
 
   const res = await fetch('upload.php', {
     method: 'POST',
     body: formData
   });
 
-  const result = await res.json();
-  if (result.success) {
-    await loadMedia();
-    this.reset();
+  if (res.ok) {
+    alert('Fichier uploadé avec succès !');
+    location.reload();
   } else {
-    alert('Erreur : ' + result.message);
+    alert("Échec de l'envoi du fichier.");
   }
 });
 
 loadMedia();
-
