@@ -1,83 +1,104 @@
-/* style général inchangé sauf ajout téléchargement */
 body {
-  background: #111;
-  color: #eee;
   font-family: 'Segoe UI', sans-serif;
+  background: #fdfdfd;
   margin: 0;
+  padding: 0;
+  color: #333;
 }
+
 header {
+  background: #222;
+  color: white;
+  padding: 2rem 1rem;
   text-align: center;
-  padding: 2rem;
-  background: #000;
-  box-shadow: 0 2px 15px rgba(0,0,0,0.7);
 }
-header form {
+
+.header-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.decor {
+  width: 60px;
+  height: auto;
+}
+
+.title-block h1 {
+  margin: 0;
+  font-size: 2.2rem;
+}
+
+.title-block p {
+  margin: 0.5rem 0;
+}
+
+form#uploadForm {
   margin-top: 1rem;
 }
-input[type="file"] {
-  background: #222;
-  color: #ccc;
+
+form input[type="file"] {
   padding: 0.5rem;
-  border-radius: 5px;
+  margin-right: 10px;
 }
-button {
-  background: #0f62fe;
-  border: none;
+
+form button {
+  padding: 0.5rem 1rem;
+  background-color: #4CAF50;
   color: white;
-  padding: 0.6rem 1rem;
+  border: none;
   border-radius: 5px;
   cursor: pointer;
 }
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+
+main {
+  max-width: 1200px;
+  margin: auto;
   padding: 2rem;
 }
-.gallery-item {
-  background: #1a1a1a;
-  padding: 0.5rem;
-  border-radius: 10px;
-  position: relative;
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
 }
+
+.gallery-item {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+  cursor: pointer;
+}
+
 .gallery-item img,
 .gallery-item video {
   width: 100%;
-  border-radius: 8px;
-  cursor: pointer;
+  height: auto;
+  display: block;
 }
-.download-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border: none;
-  padding: 5px;
-  border-radius: 4px;
-  cursor: pointer;
+
+#error {
+  color: red;
+  text-align: center;
+  padding: 1rem;
 }
+
 #lightbox {
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.9);
+  background-color: rgba(0,0,0,0.9);
   display: none;
-  justify-content: center;
   align-items: center;
-  flex-direction: column;
+  justify-content: center;
   z-index: 1000;
 }
+
 #lightbox-content img,
 #lightbox-content video {
-  max-width: 90%;
+  max-width: 90vw;
   max-height: 90vh;
-}
-#lightbox-close {
-  position: absolute;
-  top: 20px;
-  right: 30px;
-  font-size: 2rem;
-  color: white;
-  cursor: pointer;
+  border-radius: 10px;
 }
