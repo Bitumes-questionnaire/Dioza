@@ -158,56 +158,104 @@
   </div>
 
   <script>
-    async function loadMedia() {
-      try {
-        const response = await fetch('media.json');
-        if (!response.ok) throw new Error('media.json introuvable');
-        const media = await response.json();
-        const gallery = document.getElementById('gallery');
-        const existingFiles = new Set();
+let currentPlayingVideo = null;
 
-        media.forEach(item => {
-          if (existingFiles.has(item.file)) return; // Évite les doublons
-          existingFiles.add(item.file);
+async function loadMedia() {
+  try {
+    const response = await fetch('media.json');
+    if (!response.ok) throw new Error('media.json introuvable');
+    const media = await response.json();
+    const gallery = document.getElementById('gallery');
+    const existingFiles = new Set();
 
-          const div = document.createElement('div');
-          div.className = 'gallery-item';
+    media.forEach(item => {
+      if (existingFiles.has(item.file)) return;
+      existingFiles.add(item.file);
 
-          if (item.type === 'image') {
-            const img = document.createElement('img');
-            img.src = item.file;
-            img.alt = 'Souvenir';
-            img.onclick = () => openLightbox(`<img src="${item.file}" alt="Souvenir">`);
-            div.appendChild(img);
-          } else if (item.type === 'video') {
-            const video = document.createElement('video');
-            video.src = item.file;
-            video.controls = true;
-            video.onclick = () => openLightbox(`<video src="${item.file}" controls autoplay></video>`);
-            div.appendChild(video);
-          }
+      const div = document.createElement('div');
+      div.className = 'gallery-item';
 
-          gallery.appendChild(div);
-        });
-      } catch (e) {
-        console.error(e);
-        document.getElementById('error').style.display = 'block';
+      if (item.type === 'image') {
+        const img = document.createElement('img');
+        img.src = item.file;
+        img.alt = 'Souvenir';
+        img.onclick = () => openLightbox(`<img src="${item.file}" alt="Souvenir">`);
+        div.appendChild(img);
+      } else if (item.type === 'video') {
+        const thumbnail = document.createElement('div');
+        thumbnail.textContent = '▶️ Voir la vidéo';
+        thumbnail.style.cursor = 'pointer';
+        thumbnail.style.background = '#222';
+        thumbnail.style.color = 'white';
+        thumbnail.style.fontSize = '1.2rem';
+        thumbnail.style.display = 'flex';
+        thumbnail.style.alignItems = 'center';
+        thumbnail.style.justifyContent = 'center';
+        thumbnail.style.width = '100%';
+        thumbnail.style.height = '100%';
+
+        thumbnail.onclick = () => {
+          stopCurrentVideo(); // Stop autre vidéo
+          openLightboxVideo(item.file);
+        };
+
+        div.appendChild(thumbnail);
       }
-    }
 
-    function openLightbox(content) {
-      const lightbox = document.getElementById('lightbox');
-      document.getElementById('lightbox-content').innerHTML = content;
-      lightbox.style.display = 'flex';
-    }
+      gallery.appendChild(div);
+    });
+  } catch (e) {
+    console.error(e);
+    document.getElementById('error').style.display = 'block';
+  }
+}
 
-    function closeLightbox() {
-      const lightbox = document.getElementById('lightbox');
-      lightbox.style.display = 'none';
-      document.getElementById('lightbox-content').innerHTML = '';
-    }
+function openLightbox(contentHTML) {
+  const lightbox = document.getElementById('lightbox');
+  document.getElementById('lightbox-content').innerHTML = contentHTML;
+  lightbox.style.display = 'flex';
+}
 
-    loadMedia();
+function openLightboxVideo(videoURL) {
+  const video = document.createElement('video');
+  video.src = videoURL;
+  video.controls = true;
+  video.autoplay = true;
+  video.style.maxWidth = '100%';
+  video.style.maxHeight = '90vh';
+  video.style.borderRadius = '8px';
+
+  stopCurrentVideo(); // sécurité
+
+  currentPlayingVideo = video;
+
+  const lightbox = document.getElementById('lightbox');
+  const content = document.getElementById('lightbox-content');
+  content.innerHTML = '';
+  content.appendChild(video);
+  lightbox.style.display = 'flex';
+
+  // Stop video when lightbox is closed
+  video.onended = () => { currentPlayingVideo = null; };
+}
+
+function closeLightbox() {
+  const lightbox = document.getElementById('lightbox');
+  lightbox.style.display = 'none';
+  stopCurrentVideo();
+  document.getElementById('lightbox-content').innerHTML = '';
+}
+
+function stopCurrentVideo() {
+  if (currentPlayingVideo && !currentPlayingVideo.paused) {
+    currentPlayingVideo.pause();
+    currentPlayingVideo.currentTime = 0;
+  }
+  currentPlayingVideo = null;
+}
+
+loadMedia();
+
   </script>
 </body>
 </html>
