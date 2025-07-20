@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Hommage à Mon Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #222;
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    main {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .gallery-item {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transition: transform 0.2s ease;
+    }
+
+    .gallery-item:hover {
+      transform: scale(1.02);
+    }
+
+    .gallery-item img,
+    .gallery-item video {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      padding: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🌈 Hommage à Mon Chat Bien-Aimé</h1>
+    <p>Souvenirs précieux réunis ici pour toujours.</p>
+  </header>
+
+  <main>
+    <div id="gallery" class="gallery"></div>
+    <div id="error" class="error" style="display: none;">Erreur lors du chargement des souvenirs.</div>
+  </main>
+
+  <script>
+    async function loadMedia() {
+      try {
+        const response = await fetch('media.json');
+        if (!response.ok) throw new Error('Fichier introuvable');
+        const media = await response.json();
+        const gallery = document.getElementById('gallery');
+
+        media.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'gallery-item';
+
+          if (item.type === 'image') {
+            const img = document.createElement('img');
+            img.src = item.file;
+            img.alt = 'Souvenir';
+            div.appendChild(img);
+          } else if (item.type === 'video') {
+            const video = document.createElement('video');
+            video.src = item.file;
+            video.controls = true;
+            video.playsInline = true;
+            div.appendChild(video);
+          }
+
+          gallery.appendChild(div);
+        });
+      } catch (e) {
+        console.error(e);
+        document.getElementById('error').style.display = 'block';
+      }
+    }
+
+    loadMedia();
+  </script>
+</body>
+</html>
