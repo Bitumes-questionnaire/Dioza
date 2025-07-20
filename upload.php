@@ -1,36 +1,30 @@
 <?php
-$allowed = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/webm'];
-$uploadDir = 'uploads/';
-$mediaFile = 'media.json';
+// Autoriser les en-têtes CORS si besoin (local ou test)
+header("Access-Control-Allow-Origin: *");
 
-if (!isset($_FILES['media'])) {
-  echo json_encode(['success' => false, 'message' => 'Aucun fichier reçu.']);
-  exit;
+$targetDir = "uploads/";
+if (!is_dir($targetDir)) {
+    mkdir($targetDir, 0777, true);
 }
 
-$file = $_FILES['media'];
-$type = mime_content_type($file['tmp_name']);
-$ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-$name = uniqid() . '.' . $ext;
+if (isset($_FILES["media"])) {
+    $fileName = basename($_FILES["media"]["name"]);
+    $targetFile = $targetDir . $fileName;
 
-if (!in_array($type, $allowed)) {
-  echo json_encode(['success' => false, 'message' => 'Type de fichier non autorisé.']);
-  exit;
+    $fileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+    $allowedTypes = ["jpg", "jpeg", "png", "gif", "mp4", "webm"];
+
+    if (!in_array($fileType, $allowedTypes)) {
+        echo json_encode(["error" => "Type de fichier non autorisé"]);
+        exit;
+    }
+
+    if (move_uploaded_file($_FILES["media"]["tmp_name"], $targetFile)) {
+        echo json_encode(["success" => true, "file" => $targetFile]);
+    } else {
+        echo json_encode(["error" => "Erreur lors de l’upload"]);
+    }
+} else {
+    echo json_encode(["error" => "Aucun fichier reçu"]);
 }
-
-if (!move_uploaded_file($file['tmp_name'], $uploadDir . $name)) {
-  echo json_encode(['success' => false, 'message' => 'Erreur d’upload.']);
-  exit;
-}
-
-$newEntry = [
-  'type' => strpos($type, 'video') !== false ? 'video' : 'image',
-  'file' => $uploadDir . $name
-];
-
-$data = file_exists($mediaFile) ? json_decode(file_get_contents($mediaFile), true) : [];
-$data[] = $newEntry;
-file_put_contents($mediaFile, json_encode($data, JSON_PRETTY_PRINT));
-
-echo json_encode(['success' => true]);
-
+?>
