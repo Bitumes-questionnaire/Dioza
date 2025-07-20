@@ -8,8 +8,14 @@
 </head>
 <body>
   <header>
-    <h1>🐾 Dioza</h1>
-    <p>Galerie d’images et vidéos en souvenir</p>
+    <div class="header-wrapper">
+      <img src="assets/chat_left.png" alt="Décor gauche" class="decor decor-left" />
+      <div class="title-block">
+        <h1>🐾 Dioza</h1>
+        <p>Galerie d’images et vidéos en souvenir</p>
+      </div>
+      <img src="assets/chat_right.png" alt="Décor droite" class="decor decor-right" />
+    </div>
     <form id="uploadForm" enctype="multipart/form-data">
       <input type="file" name="media" id="media" accept="image/*,video/*" required>
       <button type="submit">Uploader</button>
@@ -22,8 +28,7 @@
   </main>
 
   <!-- Lightbox -->
-  <div id="lightbox">
-    <div id="lightbox-close" onclick="closeLightbox()">✖</div>
+  <div id="lightbox" onclick="closeLightbox()">
     <div id="lightbox-content"></div>
   </div>
 
