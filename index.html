@@ -4,9 +4,132 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dioza – Galerie Souvenirs</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(to bottom, #f5f7fa, #c3cfe2);
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    header {
+      background-color: #20232a;
+      color: white;
+      padding: 2rem 1rem 1rem 1rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .header-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    .decor {
+      height: 120px;
+      width: auto;
+      opacity: 0.9;
+    }
+
+    .title-block h1 {
+      font-size: 2.5rem;
+      margin: 0;
+    }
+
+    .title-block p {
+      margin: 0.3rem 0;
+    }
+
+    form#uploadForm {
+      margin-top: 1rem;
+    }
+
+    form input[type="file"] {
+      padding: 0.5rem;
+    }
+
+    form button {
+      background-color: #61dafb;
+      border: none;
+      padding: 0.5rem 1rem;
+      margin-left: 0.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    main {
+      padding: 2rem;
+      max-width: 1300px;
+      margin: auto;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .gallery-item {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 280px;
+    }
+
+    .gallery-item:hover {
+      transform: scale(1.03);
+    }
+
+    .gallery-item img,
+    .gallery-item video {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+      cursor: pointer;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    #lightbox {
+      position: fixed;
+      display: none;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #lightbox-content {
+      max-width: 90%;
+      max-height: 90%;
+    }
+
+    #lightbox-content img,
+    #lightbox-content video {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+  </style>
 </head>
 <body>
+
   <header>
     <div class="header-wrapper">
       <img src="assets/chat_left.png" alt="Décor gauche" class="decor decor-left" />
@@ -33,6 +156,57 @@
     <div id="lightbox-content"></div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    async function loadMedia() {
+      try {
+        const response = await fetch('media.json');
+        if (!response.ok) throw new Error('media.json introuvable');
+        const media = await response.json();
+        const gallery = document.getElementById('gallery');
+        const existingFiles = new Set();
+
+        media.forEach(item => {
+          if (existingFiles.has(item.file)) return; // Évite les doublons
+          existingFiles.add(item.file);
+
+          const div = document.createElement('div');
+          div.className = 'gallery-item';
+
+          if (item.type === 'image') {
+            const img = document.createElement('img');
+            img.src = item.file;
+            img.alt = 'Souvenir';
+            img.onclick = () => openLightbox(`<img src="${item.file}" alt="Souvenir">`);
+            div.appendChild(img);
+          } else if (item.type === 'video') {
+            const video = document.createElement('video');
+            video.src = item.file;
+            video.controls = true;
+            video.onclick = () => openLightbox(`<video src="${item.file}" controls autoplay></video>`);
+            div.appendChild(video);
+          }
+
+          gallery.appendChild(div);
+        });
+      } catch (e) {
+        console.error(e);
+        document.getElementById('error').style.display = 'block';
+      }
+    }
+
+    function openLightbox(content) {
+      const lightbox = document.getElementById('lightbox');
+      document.getElementById('lightbox-content').innerHTML = content;
+      lightbox.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+      const lightbox = document.getElementById('lightbox');
+      lightbox.style.display = 'none';
+      document.getElementById('lightbox-content').innerHTML = '';
+    }
+
+    loadMedia();
+  </script>
 </body>
 </html>
