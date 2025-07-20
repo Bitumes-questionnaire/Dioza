@@ -43,24 +43,6 @@
       margin: 0.3rem 0;
     }
 
-    form#uploadForm {
-      margin-top: 1rem;
-    }
-
-    form input[type="file"] {
-      padding: 0.5rem;
-    }
-
-    form button {
-      background-color: #61dafb;
-      border: none;
-      padding: 0.5rem 1rem;
-      margin-left: 0.5rem;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
     main {
       padding: 2rem;
       max-width: 1300px;
@@ -117,18 +99,49 @@
     #lightbox-content {
       max-width: 90%;
       max-height: 90%;
+      position: relative;
     }
 
-#lightbox-content img,
-#lightbox-content video {
-  max-width: 100%;
-  max-height: 90vh;
-  width: auto;
-  height: auto;
-  border-radius: 8px;
-  object-fit: contain;
-}
+    #lightbox-content img,
+    #lightbox-content video {
+      max-width: 100%;
+      max-height: 90vh;
+      width: auto;
+      height: auto;
+      border-radius: 8px;
+      object-fit: contain;
+    }
 
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3rem;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+      z-index: 10000;
+    }
+
+    .nav-arrow.left {
+      left: -60px;
+    }
+
+    .nav-arrow.right {
+      right: -60px;
+    }
+
+    .download-link {
+      position: absolute;
+      top: -50px;
+      right: 0;
+      background: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+    }
 
   </style>
 </head>
@@ -144,7 +157,6 @@
       </div>
       <img src="assets/chat_right.png" alt="Décor droite" class="decor decor-right" />
     </div>
-
   </header>
 
   <main>
@@ -152,23 +164,24 @@
     <div id="error" class="error" style="display: none;">Erreur lors du chargement des souvenirs.</div>
   </main>
 
-  <!-- Lightbox -->
   <div id="lightbox" onclick="closeLightbox()">
     <div id="lightbox-content"></div>
   </div>
 
   <script>
 let currentPlayingVideo = null;
+let mediaList = [];
+let currentIndex = -1;
 
 async function loadMedia() {
   try {
     const response = await fetch('media.json');
     if (!response.ok) throw new Error('media.json introuvable');
-    const media = await response.json();
+    mediaList = await response.json();
     const gallery = document.getElementById('gallery');
     const existingFiles = new Set();
 
-    media.forEach(item => {
+    mediaList.forEach((item, index) => {
       if (existingFiles.has(item.file)) return;
       existingFiles.add(item.file);
 
@@ -179,7 +192,7 @@ async function loadMedia() {
         const img = document.createElement('img');
         img.src = item.file;
         img.alt = 'Souvenir';
-        img.onclick = () => openLightbox(`<img src="${item.file}" alt="Souvenir">`);
+        img.onclick = () => openLightbox(index);
         div.appendChild(img);
       } else if (item.type === 'video') {
         const thumbnail = document.createElement('div');
@@ -195,8 +208,8 @@ async function loadMedia() {
         thumbnail.style.height = '100%';
 
         thumbnail.onclick = () => {
-          stopCurrentVideo(); // Stop autre vidéo
-          openLightboxVideo(item.file);
+          stopCurrentVideo();
+          openLightbox(index);
         };
 
         div.appendChild(thumbnail);
@@ -210,33 +223,63 @@ async function loadMedia() {
   }
 }
 
-function openLightbox(contentHTML) {
+function openLightbox(index) {
+  currentIndex = index;
+  const item = mediaList[index];
+  const content = document.getElementById('lightbox-content');
   const lightbox = document.getElementById('lightbox');
-  document.getElementById('lightbox-content').innerHTML = contentHTML;
+
+  content.innerHTML = '';
+
+  const download = document.createElement('a');
+  download.href = item.file;
+  download.className = 'download-link';
+  download.textContent = 'Télécharger';
+  download.download = '';
+  content.appendChild(download);
+
+  if (item.type === 'image') {
+    const img = document.createElement('img');
+    img.src = item.file;
+    content.appendChild(img);
+  } else if (item.type === 'video') {
+    const video = document.createElement('video');
+    video.src = item.file;
+    video.controls = true;
+    video.autoplay = true;
+    video.style.maxWidth = '100%';
+    video.style.maxHeight = '90vh';
+    video.style.borderRadius = '8px';
+    stopCurrentVideo();
+    currentPlayingVideo = video;
+    content.appendChild(video);
+  }
+
+  const leftArrow = document.createElement('div');
+  leftArrow.className = 'nav-arrow left';
+  leftArrow.innerHTML = '&#8592;';
+  leftArrow.onclick = (e) => { e.stopPropagation(); showPrev(); };
+  const rightArrow = document.createElement('div');
+  rightArrow.className = 'nav-arrow right';
+  rightArrow.innerHTML = '&#8594;';
+  rightArrow.onclick = (e) => { e.stopPropagation(); showNext(); };
+
+  content.appendChild(leftArrow);
+  content.appendChild(rightArrow);
+
   lightbox.style.display = 'flex';
 }
 
-function openLightboxVideo(videoURL) {
-  const video = document.createElement('video');
-  video.src = videoURL;
-  video.controls = true;
-  video.autoplay = true;
-  video.style.maxWidth = '100%';
-  video.style.maxHeight = '90vh';
-  video.style.borderRadius = '8px';
+function showNext() {
+  if (currentIndex < mediaList.length - 1) {
+    openLightbox(currentIndex + 1);
+  }
+}
 
-  stopCurrentVideo(); // sécurité
-
-  currentPlayingVideo = video;
-
-  const lightbox = document.getElementById('lightbox');
-  const content = document.getElementById('lightbox-content');
-  content.innerHTML = '';
-  content.appendChild(video);
-  lightbox.style.display = 'flex';
-
-  // Stop video when lightbox is closed
-  video.onended = () => { currentPlayingVideo = null; };
+function showPrev() {
+  if (currentIndex > 0) {
+    openLightbox(currentIndex - 1);
+  }
 }
 
 function closeLightbox() {
@@ -255,7 +298,6 @@ function stopCurrentVideo() {
 }
 
 loadMedia();
-
   </script>
 </body>
 </html>
